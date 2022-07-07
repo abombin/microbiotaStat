@@ -8,7 +8,7 @@ xVar=x['Sum(Total Collected)']
 
 
 
-y=data.loc[data['Diet']=='R']
+y=data.loc[data['Diet']=='PR']
 yVar=y['Sum(Total Collected)']
 
 wilcox=stats.mannwhitneyu(xVar, yVar, nan_policy='omit')

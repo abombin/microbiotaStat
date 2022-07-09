@@ -17,4 +17,12 @@ def defGetDietComb():
     output = list(product(normalList, modifiedList))
     return output
 
-print(defGetDietComb())
+# function get p values of comparisons statistic and difference in means
+def mwTest():
+    groups=defGetDietComb()
+    for i in groups:
+        var1=i[0]
+        var2=i[1]
+        
+
+mwTest()

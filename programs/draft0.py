@@ -2,6 +2,7 @@ from operator import mod
 import pandas as pd
 import scipy.stats as stats
 from itertools import product
+from statsmodels.stats import multitest
 data=pd.read_csv("C:/Users/abomb/Projects/microbiotaPhd/allDiets_collection_total.csv")
 
 def getCombinations(var):
@@ -17,33 +18,41 @@ def defGetDietComb():
     output = list(product(normalList, modifiedList))
     return output
 
-# function get p values of comparisons statistic and difference in means
+# function to get p values of comparisons statistic and difference in means
 
-def mwTest(compareBy):
+def mwTest(compare, variable, treatment):
     comparisons=[]
     pVals=[]
     meanDifference=[]
     groups=defGetDietComb()
+    dataSel=data.loc[(data['Treatment']==treatment)]
     for i in groups:
         var1=i[0]
         var2=i[1]
-        diets=(var1+'_vs_'+var2)
-        group1=data.loc[(data['Diet']==var1)]
-        xVar=group1[compareBy].dropna()
+        varComparison=(var1+'_vs_'+var2)
+        group1=dataSel.loc[(dataSel[variable]==var1)]
+        xVar=group1[compare].dropna()
         xVarMean=xVar.mean()
-        group2=data.loc[(data['Diet']==var2)]
-        yVar=group2[compareBy].dropna()
+        group2=dataSel.loc[(dataSel[variable]==var2)]
+        yVar=group2[compare].dropna()
         yVarMean=yVar.mean()
         U1, p=stats.mannwhitneyu(xVar, yVar, nan_policy='omit')
         difference=(xVarMean-yVarMean)
         # append lists
-        comparisons.append(diets)
+        comparisons.append(varComparison)
         pVals.append(p)
         meanDifference.append(difference)
-        print(pVals)
-        print(meanDifference)
+    testResults=pd.DataFrame({'Comparisons': comparisons, 'pVal': pVals, 'Mean_Difference': meanDifference})
+    return(testResults)
 
 
 
-mwTest('Sum(Total Collected)')
+totalDiet=mwTest(compare='Sum(Total Collected)', variable='Diet', treatment='S')
+totalDeitSel=totalDiet.iloc[[1,5,4,8,10,16,20]].reset_index(drop=True)
+#print(totalDeitSel)
 
+pVals=totalDeitSel['pVal'].tolist()
+adjPVals=multitest.fdrcorrection(pVals, alpha=0.05, method='indep', is_sorted=False)
+print(adjPVals)
+
+totalDeitSel.to_csv("C:/Users/abomb/Projects/microbiotaPhd/output/totalDietS.csv", index=False)
